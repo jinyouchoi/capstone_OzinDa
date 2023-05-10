@@ -1,83 +1,73 @@
 import cv2
 import mediapipe as mp
-import pygame
+import numpy as np
 import time
+from dtw import dtw
 
-# 파이게임 초기화
-pygame.init()
+cv2.namedWindow("Window", cv2.WINDOW_NORMAL)
+cv2.namedWindow("Camera", cv2.WINDOW_NORMAL)
 
-# 화면 크기 설정
-screen_width = 640
-screen_height = 480
-screen = pygame.display.set_mode((screen_width, screen_height))
+mp_drawing = mp.solutions.drawing_utils
+mp_pose = mp.solutions.pose
 
-# 미디어 파이프 초기화
-mp_holistic = mp.solutions.holistic
-holistic = mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5)
+cap = cv2.VideoCapture(0)
 
-# 카운트 다운 변수 초기화
-count = 5
+countdown = 5
+while countdown > 0:
+    print(f"{countdown}초 후 동작을 인식하겠습니다.")
+    time.sleep(1)
+    countdown -= 1
 
-# 카운트 다운 시작 시간 기록
-start_time = time.time()
+with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5) as pose:
+    start = time.time()
+    motion = [] #비교할 첫번 째 모션 -> 정지된 캡처 이미지
+    while time.time()-start < 5:
+        ret, frame = cap.read()
+        frame = cv2.flip(frame, 1)
+        h, w, _ = frame.shape
+        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-# 게임 루프
-while True:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
+        results = pose.process(frame_rgb) # MediaPipe 라이브러리에서 제공하는 Pose 모델을 사용하여 입력 이미지에서 사람의 동작을 감지하고 관절 위치를 추출
 
-    # 검정색 화면에 하얀색으로 카운트 다운 텍스트 출력
-    screen.fill((0, 0, 0))
-    if count > 0:
-        elapsed_time = time.time() - start_time
-        if elapsed_time >= 1:
-            count -= 1
-            start_time = time.time()
-        if count == 0:
-            pygame.draw.rect(screen, (255, 255, 255), pygame.Rect(screen_width // 2 - 50, screen_height // 2 - 50, 100, 100))
-        else:
-            font = pygame.font.Font(None, 100)
-            text = font.render(f"{count}", True, (255, 255, 255))
-            screen.blit(text, (screen_width // 2 - 50, screen_height // 2 - 50))
+        if results.pose_landmarks is not None: #pose_landmarks 속성에 포즈 관절 위치 정보 저
+            mp_drawing.draw_landmarks(frame, results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
+             #관절 위치 정보를 리스트에 저장 : motion
+            motion.append([lmk.x*w for lmk in results.pose_landmarks.landmark] + [lmk.y*h for lmk in results.pose_landmarks.landmark])
 
-    # 5초 후 "동작을 인식 중입니다!" 텍스트 출력
-    elif count == 0:
-        elapsed_time = time.time() - start_time
-        if elapsed_time >= 5:
-            screen.fill((0, 0, 0))
-            font = pygame.font.Font(None, 50)
-            text = font.render("motion capture now!", True, (255, 255, 255))
-            screen.blit(text, (10, 10))
+        cv2.imshow("Camera", frame)
+        if cv2.waitKey(1) == ord('q'):
+            break
 
-            # 카메라로부터 영상 프레임 읽기
-            cap = cv2.VideoCapture(0)
-            ret, frame = cap.read()
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5) as pose:
+    start = time.time()
+    count = 0
+    while True:
+        ret, frame = cap.read()
+        frame = cv2.flip(frame, 1)
+        h, w, _ = frame.shape
+        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-            # 미디어 파이프를 이용하여 키 포인트 추출
-            results = holistic.process(frame)
-            if results.pose_landmarks:
-                # 키 포인트 좌표 추출
-                for landmark in results.pose_landmarks.landmark:
-                    cx, cy = int(landmark.x * screen_width), int(landmark.y * screen_height)
-                    cv2.circle(frame, (cx, cy), 5, (0, 255, 0), -1)
+        results = pose.process(frame_rgb)
+        if results.pose_landmarks is not None:
+            mp_drawing.draw_landmarks(frame, results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
+            #실시간 현재 관절 위치 정보 리스트에 저장 : curr_motion
+            curr_motion = [lmk.x*w for lmk in results.pose_landmarks.landmark] + [lmk.y*h for lmk in results.pose_landmarks.landmark] 
 
-                # 추출한 키 포인트를 화면에 출력
-                frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-                frame = cv2.resize(frame, (screen_width, screen_height))
-                frame = pygame.surfarray.make_surface(frame)
-                screen.blit(frame, (0, 50))
+            if len(curr_motion) > 0 and len(motion) > 0:
+                # dtw로 유사도 검증 : motion 리스트 vs curr_motion 리스트 
+                d, _, _, _ = dtw(np.array(motion), np.array([curr_motion]), dist=lambda x, y: np.linalg.norm(x - y, ord=1))
+                # 일정 유사도 이하이면 동일한 것으로 취급 
+                if d < 13:#줄일수록 빡빡함
+                    count += 1
 
-            # "모션 이름 짓기" 버튼 출력
-            pygame.draw.rect(screen, (0, 255, 0), pygame.Rect(screen_width - 150, screen_height - 50, 150, 50))
-            font = pygame.font.Font(None, 25)
-            text = font.render("naming", True, (0, 0, 0))
-            screen.blit(text, (screen_width - 150 + 25, screen_height - 50 + 15))
+                # 카운트 횟수 출력
+                cv2.putText(frame, f"Count: {count}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
 
-            # 화면 업데이트
-            pygame.display.flip()
+            motion = [curr_motion]
 
-    # 화면 업데이트
-    pygame.display.flip()
+        cv2.imshow("Camera", frame)
+        if cv2.waitKey(1) == ord('q'):
+            break
+
+cap.release()
+cv2.destroyAllWindows()
