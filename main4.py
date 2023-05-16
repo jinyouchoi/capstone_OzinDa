@@ -95,7 +95,11 @@ def quitgame():
 # 1프레임 캡처
 def cameraCapture(iscap):
 
-    nameList = []
+    name_list = []
+
+    #캡처한 이미지를 넣을 리스트
+    image_list = []
+
     # 모션캡처화면 속 카메라 위치
     motionCap_cameraX = 150
     motionCap_cameraY = 120
@@ -147,6 +151,7 @@ def cameraCapture(iscap):
                 # 이미지를 화면 중앙에 맞춰서 출력하기
                 image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
+
                 results = mp_holistic.process(image)
 
                 if results.pose_landmarks:
@@ -158,6 +163,8 @@ def cameraCapture(iscap):
                 image = pygame.transform.scale(image, (CAMERA_WIDTH, CAMERA_HEIGHT))
 
                 gameDisplay.blit(image, (motionCap_cameraX, motionCap_cameraY))
+                
+
 
                 # 카운트 다운 출력
                 count_down = font.render(str(5 - j), True, (255, 255, 255))
@@ -195,10 +202,10 @@ def cameraCapture(iscap):
                     if frame_count == 0:
                         frames = []
 
+                    frames = [frame_count] + [landmark.x * CAMERA_WIDTH for landmark in results.pose_landmarks.landmark] + [
+                            landmark.y * CAMERA_HEIGHT for landmark in results.pose_landmarks.landmark]
                     # 캡쳐할 프레임 리스트에 현재 프레임 추가
-                    frames.append(
-                        [frame_count] + [landmark.x * CAMERA_WIDTH for landmark in results.pose_landmarks.landmark] + [
-                            landmark.y * CAMERA_HEIGHT for landmark in results.pose_landmarks.landmark])
+                    frames.append(image)
 
                     # 프레임 카운트 증가
                     frame_count += 1
@@ -219,12 +226,19 @@ def cameraCapture(iscap):
                 # 이미지를 BGR로 변환하고 저장하기
                 image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
+  #############################이미지 변환하기
+                image = image_change(image)
+
+                #이미지 리스트에 내 이미지 추가
+                image_list.append(image)
+
+
 
             while True :
                 csv_filename = naming(nextButton)
 
                 # 파일 이름이 이미 있는 경우 다시 쓰기
-                if csv_filename in nameList:
+                if csv_filename in name_list:
                     gameDisplay.blit(promptImg, (promptX, promptY))
                     same_name = font.render("Please write another name", True, (255, 255, 255))
                     gameDisplay.blit(same_name, (800, 300))
@@ -234,23 +248,73 @@ def cameraCapture(iscap):
 
                 else:
                     # csv 파일로 저장하기
-                    with open("frame_{}.csv".format(csv_filename), "w", newline="") as csvfile:
+                    with open("{}.csv".format(csv_filename), "w", newline="") as csvfile:
                         writer = csv.writer(csvfile)
                         writer.writerow(
                             ["frame"] + ["x{}".format(j) for j in range(33)] + ["y{}".format(j) for j in range(33)])
-                        writer.writerows(frames)
+                        writer.writerow([1])
 
-                    nameList.append(csv_filename)
+                    name_list.append(csv_filename)
                     break
 
+    image_check(image_list,namingBoxImg,name_list)
+    pygame.display.flip()
 
 
-        # 종료하기
-        cap.release()
-        return
+def image_check(image_list,namingBoxImg,name_list):
+    gameDisplay.blit(motionCapture_BackImg, (0, 0))
+    nextButton = Button(nextButtonImg, 1350, 30, nextButtonImg.get_width(), nextButtonImg.get_height(),
+                        nextButtonImg, 1350, 30, None)
+    nextButton.draw(gameDisplay)
+    namingBoxImg = pygame.transform.scale(namingBoxImg,(420,150))
+    gameDisplay.blit(namingBoxImg, (140,650))
+    gameDisplay.blit(namingBoxImg, (590,650))
+    gameDisplay.blit(namingBoxImg, (1050,650))
+    check = font.render(" < CHECK YOUR MOTION > ", True, (0,0,0))
+    gameDisplay.blit(check,(580,90))
+
+    #이름 출력
+    name1 = font.render(name_list[0], True, (255, 255, 255))
+    name2 = font.render(name_list[1], True, (255, 255, 255))
+    name3 = font.render(name_list[2], True, (255, 255, 255))
+    gameDisplay.blit(name1, (220, 690))
+    gameDisplay.blit(name2, (670, 690))
+    gameDisplay.blit(name3, (1130, 690))
+
+    while nextButton.click == False:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            nextButton.handle_event(event)
+        display_image(image_list)
+        pygame.display.update()
+
+
+###########이미지 변환하기##########################
+def image_change(image):
+    image = cv2.rotate(image, cv2.ROTATE_90_COUNTERCLOCKWISE)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    resized_image = cv2.resize(image,(500,400))
+    image = pygame.surfarray.make_surface(resized_image)
+    return image
+
+
+###########이미지 3개 띄우기##########3
+##전역변수 이거는 약간의 수정이 필요할 수도;;
+
+x = 150
+y = 150
+def display_image(image_list):
+    global x,y
+    padding = 50
+    width = 400
+    image_num = len(image_list)
+    for i in range(image_num):
+        gameDisplay.blit(image_list[i], (x + (width + padding) * i, y))
+    pygame.display.flip()
 
 def naming(nextButton):
-
     # 텍스트 입력
     text = ""
     namingBoxButton = Button(namingBoxImg, namingBox_x, namingBox_y, namingBoxImg.get_width(), namingBoxImg.get_height(), namingBoxImg, namingBox_x, namingBox_y, None)
@@ -273,10 +337,10 @@ def naming(nextButton):
 
                 else:
                     text += event.unicode  # 글자 추가
+
                     # 작성란에 텍스트 그리기
                     textline = font.render(text, True, (255, 255, 255))
                     gameDisplay.blit(textline, (namingBox_x + 100, namingBox_y + 50))
-
 
             pygame.display.update()
 
