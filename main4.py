@@ -26,6 +26,9 @@ mainBackgroundImg = pygame.transform.scale(mainBackgroundImg, (display_width, di
 motionCapture_BackImg = pygame.image.load("C:\\capston\\배경\\동작인식화면.jpg")
 motionCapture_BackImg = pygame.transform.scale(motionCapture_BackImg, (display_width, display_height))
 
+levelSelect_BackImg = pygame.image.load("C:\\capston\\배경\\레벨선택화면.jpg")
+levelSelect_BackImg = pygame.transform.scale(levelSelect_BackImg, (display_width, display_height))
+
 # 객체 이미지 설정
 
 #버튼 사이즈
@@ -46,6 +49,12 @@ howplayButtonImg = load_image("C:\capston\객체\howplay버튼.png", (buttonSize
 namingBoxImg = load_image("C:\capston\객체\네이밍칸.png", (700, 200))
 nextButtonImg = load_image("C:\\capston\\객체\\next버튼.png", (200, 100))
 promptImg = load_image("C:\capston\객체\prompt.png", (750, 400))
+level1 = load_image("C:\\capston\\객체\\레벨1.png",(150,150))
+level2 = load_image("C:\\capston\\객체\\레벨2.png",(150,150))
+level3 = load_image("C:\\capston\\객체\\레벨3.png",(150,150))
+level4 = load_image("C:\\capston\\객체\\레벨4.png",(150,150))
+level5 = load_image("C:\\capston\\객체\\레벨5.png",(150,150))
+level6 = load_image("C:\\capston\\객체\\레벨6.png",(150,150))
 
 
 namingBox_x = display_width / 2  - 60
@@ -83,7 +92,35 @@ class Button:
         else:
             surface.blit(self.img_in, (self.x, self.y))
 
+#-------------------버튼 2____________________________________
+class Button2:
+    def __init__(self, img_in, x, y, width, height, img_act, x_act, y_act, level_num, action=None):
+        self.img_in = img_in
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.img_act = img_act
+        self.x_act = x_act
+        self.y_act = y_act
+        self.action = action
+        self.click = False
+        self.level_num = level_num
 
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            mouse_pos = pygame.mouse.get_pos()
+            if self.x <= mouse_pos[0] <= self.x + self.width and self.y <= mouse_pos[1] <= self.y + self.height:
+                self.click = True
+                if self.action:
+                    self.action(self.level_num)
+
+    def draw(self, surface):
+        mouse_pos = pygame.mouse.get_pos()
+        if self.x <= mouse_pos[0] <= self.x + self.width and self.y <= mouse_pos[1] <= self.y + self.height:
+            surface.blit(self.img_act, (self.x_act, self.y_act))
+        else:
+            surface.blit(self.img_in, (self.x, self.y))
 # ______________________________ 수행 함수 ________________________________
 
 # 종료
@@ -257,8 +294,11 @@ def cameraCapture(iscap):
                     name_list.append(csv_filename)
                     break
 
+    cap.release()
     image_check(image_list,namingBoxImg,name_list)
-    pygame.display.flip()
+    level_select()
+    return
+
 
 
 def image_check(image_list,namingBoxImg,name_list):
@@ -289,6 +329,7 @@ def image_check(image_list,namingBoxImg,name_list):
             nextButton.handle_event(event)
         display_image(image_list)
         pygame.display.update()
+    return
 
 
 ###########이미지 변환하기##########################
@@ -299,10 +340,41 @@ def image_change(image):
     image = pygame.surfarray.make_surface(resized_image)
     return image
 
+#레벨을 선택하는 화면
+def level_select():
+    level_list = []
+    gameDisplay.blit(levelSelect_BackImg, (0, 0))
+    #레벨 단계별로 나오는 거
+    level_1_Button = Button(level1,65, 550, level1.get_width(),level1.get_height(), level1, 65, 550, None)
+    level_list.append(level_1_Button)
+    level_2_Button = Button(level2,330, 460, level2.get_width(),level2.get_height(), level2, 330, 460, None)
+    level_list.append(level_2_Button)
+    level_3_Button = Button(level3,665, 530, level3.get_width(),level3.get_height(), level3, 665, 530, None)
+    level_list.append(level_3_Button)
+    level_4_Button = Button(level4,840, 300, level4.get_width(),level4.get_height(), level4,840, 300, None)
+    level_list.append(level_4_Button)
+    level_5_Button = Button(level5,1100, 450, level5.get_width(),level5.get_height(), level5, 1100, 450, None)
+    level_list.append(level_5_Button)
+    level_6_Button = Button(level6,1380, 370, level6.get_width(),level6.get_height(), level6, 1380, 370, None)
+    level_list.append(level_6_Button)
 
-###########이미지 3개 띄우기##########3
+    while True:
+        for button in level_list:
+            button.draw(gameDisplay)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                quitgame()
+            for button in level_list:
+                button.handle_event(event)
+
+        pygame.display.update()
+
+
+
+
+###########이미지 3개 띄우기##########
 ##전역변수 이거는 약간의 수정이 필요할 수도;;
-
 x = 150
 y = 150
 def display_image(image_list):
@@ -313,6 +385,7 @@ def display_image(image_list):
     for i in range(image_num):
         gameDisplay.blit(image_list[i], (x + (width + padding) * i, y))
     pygame.display.flip()
+    return
 
 def naming(nextButton):
     # 텍스트 입력
