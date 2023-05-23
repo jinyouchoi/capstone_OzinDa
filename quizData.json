@@ -1,0 +1,9 @@
+{
+  "problems": [
+    {
+      "code": "i = 1\nwhile i < 3:\n    _____\n    i += 1",
+      "answer" : ""
+    }
+  ],
+  "grading_code": "i = 1\nwhile i < 3:\n    if check_same(cur_motion, motion):\n        i += 1\nprint('correct')"
+}
