@@ -534,10 +534,8 @@ def naming(nextButton, img):
                         # 캡쳐 완료 메시지 출력
                         capture_complete3 = font.render("Capture Complete.", True, (255, 255, 255))
                         gameDisplay.blit(capture_complete3, (800, 200))
-                        capture_complete4 = font.render("Click on the box below.", True, (255, 255, 255))
-                        gameDisplay.blit(capture_complete4, (800, 300))
-                        name = font.render("Write the motion's name", True, (255, 255, 255))
-                        gameDisplay.blit(name, (800, 400))
+                        name = font.render("Write a name of the motion", True, (255, 255, 255))
+                        gameDisplay.blit(name, (800, 300))
                         pygame.display.flip()
 
                         textline = font.render(text, True, (255, 255, 255))
@@ -577,7 +575,7 @@ def SetQuestion(nameList, num):
     cur_motion = [] #현재 모션을 저장할 변수
 
 
-    with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5) as pose:
+    with mp_pose.Pose(min_detection_confidence = 0.5, min_tracking_confidence=0.5) as pose:
         # 코드 가져오기
         quiz_code, limit_time = add_input_to_quiz('C:/capston/quizData.json', num, nameList)
         answer_motion = answer_info('C:/capston/quizData.json', num, nameList)
@@ -673,6 +671,7 @@ def SetQuestion(nameList, num):
 
 
 #json 문제 파일 속에 사용자의 모션함수 넣기 -> 문제 번호에 대한 랜덤 완성 문제 code 리턴
+#json 문제 파일 속에 사용자의 모션함수 넣기 -> 문제 번호에 대한 랜덤 완성 문제 code 리턴
 def add_input_to_quiz(file_name, problem_index, motion_function_names): #json 파일, 문제번호(랜덤), 모션함수 이름 리스트
     with open(file_name, 'r') as file:
         data = json.load(file)
@@ -718,8 +717,8 @@ def check_motion(count, cur_motion, answer_motion):
         print("ans: ", answer_motion)
 
         if d < 100:  # 줄일수록 빡빡함
-            print("cur: ", cur_motion)
-            print("ans: ", answer_motion)
+            print("correct cur: ", cur_motion)
+            print("correct ans: ", answer_motion)
             count += 1
 
     return count
