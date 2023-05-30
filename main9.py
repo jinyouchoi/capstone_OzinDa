@@ -10,6 +10,7 @@ import json
 from dtw import dtw
 import pandas as pd
 import datetime
+import glob
 
 # _____________________초기 설정_______________
 mp_pose = mp.solutions.pose.Pose()
@@ -148,6 +149,77 @@ class Button2:
 def quitgame():
     pygame.quit()
     sys.exit()
+def continueGame():
+    IMAGE_WIDTH = display_width // 3
+    IMAGE_HEIGHT = display_height
+
+    # 이미지 불러오기
+    image = pygame.image.load("C:\\capston\\객체\\네이밍칸.png").convert_alpha()
+
+    # 이미지 크기 조정
+    image = pygame.transform.scale(image, (420,150))
+
+    # 이미지 파일 경로
+    folder_path = "C:\\capston"
+    image_files = [file for file in os.listdir(folder_path) if file.startswith("frame_") and file.endswith(".jpg")]
+
+    gameDisplay.blit(motionCapture_BackImg, (0, 0))
+
+    nextButton = Button(nextButtonImg, 1350, 30, nextButtonImg.get_width(), nextButtonImg.get_height(),
+                        nextButtonImg, 1350, 30, None)
+    nextButton.draw(gameDisplay)
+    gameDisplay.blit(image, (140, 650))
+    gameDisplay.blit(image, (590, 650))
+    gameDisplay.blit(image, (1050, 650))
+    check = font.render(" < CHECK YOUR MOTION > ", True, (0, 0, 0))
+    gameDisplay.blit(check, (580, 90))
+
+    file_list = []
+    for image_file in image_files:
+        file_name = image_file.replace("frame_", "").replace(".jpg", "")
+        file_list.append(file_name)
+
+
+    name1 = font.render(file_list[0], True, (255, 255, 255))
+    name2 = font.render(file_list[1], True, (255, 255, 255))
+    name3 = font.render(file_list[2], True, (255, 255, 255))
+    gameDisplay.blit(name1, (220, 690))
+    gameDisplay.blit(name2, (670, 690))
+    gameDisplay.blit(name3, (1130, 690))
+
+    # 이미지 로드 및 크기 조정
+    images = []
+    for image_file in image_files:
+        image_path = os.path.join(folder_path, image_file)
+        image = pygame.image.load(image_path)
+        image = pygame.transform.scale(image, (350, 500))
+        images.append(image)
+
+    # 이미지 위치 설정
+    image_positions = [
+        (170, 150),  # 왼쪽 이미지 위치
+        (625, 150),  # 가운데 이미지 위치
+        (1090, 150),  # 오른쪽 이미지 위치
+    ]
+
+    while nextButton.click == False:
+        # 이미지 그리기
+        for image, position in zip(images, image_positions):
+            gameDisplay.blit(image, position)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            nextButton.handle_event(event)
+            if nextButton.click == True :
+                level_select(file_list)
+                pygame.display.update()
+        # 화면 업데이트
+        pygame.display.flip()
+
+    return
+
 
 # 1프레임 캡처
 def cameraCapture(iscap):
@@ -325,6 +397,7 @@ def cameraCapture(iscap):
                     pygame.display.flip()
                     continue
 
+
                 else:
                     # csv 파일로 저장하기
                     with open("frame_{}.csv".format(csv_filename), "w", newline="") as csvfile:
@@ -332,8 +405,9 @@ def cameraCapture(iscap):
                         writer.writerow(
                             ["frame"] + ["x{}".format(j) for j in range(33)] + ["y{}".format(j) for j in range(33)])
                         writer.writerows(motion)
-
                     nameList.append(csv_filename)
+                    # 이미지를 파일로 저장
+                    pygame.image.save(image, "frame_{}.jpg".format(csv_filename))
                     break
 
         # 종료하기
@@ -431,7 +505,6 @@ def naming(nextButton, img):
     # 텍스트 입력
     text = ""
     namingBoxButton = Button(namingBoxImg, namingBox_x, namingBox_y, namingBoxImg.get_width(), namingBoxImg.get_height(), namingBoxImg, namingBox_x, namingBox_y, None)
-
     while nextButton.click == False:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -442,7 +515,9 @@ def naming(nextButton, img):
             if namingBoxButton.click:
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_BACKSPACE:
-                        text = text[:-1]  # 마지막 글자 삭제
+                        if len(text) > 0 :
+                            text = text[:-1] # 마지막 글자 삭제
+
                         gameDisplay.blit(motionCapture_BackImg, (0, 0))
                         gameDisplay.blit(namingBoxImg, (namingBox_x, namingBox_y))
                         gameDisplay.blit(nextButtonImg, (1200, 700))
@@ -455,11 +530,14 @@ def naming(nextButton, img):
                         img = pygame.transform.scale(img, (500, 700))
                         gameDisplay.blit(img, (150, 120))
 
+
                         # 캡쳐 완료 메시지 출력
                         capture_complete3 = font.render("Capture Complete.", True, (255, 255, 255))
                         gameDisplay.blit(capture_complete3, (800, 200))
-                        capture_complete4 = font.render("Write a name of the motion.", True, (255, 255, 255))
+                        capture_complete4 = font.render("Click on the box below.", True, (255, 255, 255))
                         gameDisplay.blit(capture_complete4, (800, 300))
+                        name = font.render("Write the motion's name", True, (255, 255, 255))
+                        gameDisplay.blit(name, (800, 400))
                         pygame.display.flip()
 
                         textline = font.render(text, True, (255, 255, 255))
@@ -469,8 +547,8 @@ def naming(nextButton, img):
                         if event.key != pygame.K_RETURN:
                             text += event.unicode  # 글자 추가
                         # 작성란에 텍스트 그리기
-                textline = font.render(text, True, (255, 255, 255))
-                gameDisplay.blit(textline, (namingBox_x + 100, namingBox_y + 50))
+                            textline = font.render(text, True, (255, 255, 255))
+                            gameDisplay.blit(textline, (namingBox_x + 100, namingBox_y + 50))
 
                 pygame.display.update()
                 nextButton.enter_event(event)
@@ -655,6 +733,20 @@ def mouseClickCheck(event):
 # ______________________________배경 함수______________________________________________________________
 
 def motionCapScreen():
+        # 특정 폴더 경로
+    folder_path = "C:\\capston"
+
+        # 폴더 내의 모든 CSV 파일 삭제
+    csv_files = glob.glob(os.path.join(folder_path, "*.csv"))
+    for csv_file in csv_files:
+        os.remove(csv_file)
+
+    file_list = os.listdir(folder_path)
+
+    for file_name in file_list:
+        if file_name.startswith("frame") and file_name.endswith(".jpg"):
+            file_path = os.path.join(folder_path, file_name)
+            os.remove(file_path)
     motionCapS = True
 
     isCap = False
@@ -666,7 +758,7 @@ def motionCapScreen():
 
         gameDisplay.blit(motionCapture_BackImg, (0, 0))
 
-        # 한번만 호출하여 캡처
+            # 한번만 호출하여 캡처
         if isCap == False:
             cameraCapture(isCap)
 
@@ -684,7 +776,7 @@ def mainScreen():
     exitButton = Button(exitButtonImg, 1260, 720, exitButtonImg.get_width() + 30, exitButtonImg.get_height() + 30,
                         exitButtonImg, 1270, 710, quitgame)
     continueButton = Button(continueButtonImg, 100, 590, continueButtonImg.get_width() + 30,
-                            continueButtonImg.get_height(), continueButtonImg, 110, 580)
+                            continueButtonImg.get_height(), continueButtonImg, 110, 580,continueGame)
     howplayButton = Button(howplayButtonImg, 100, 710, howplayButtonImg.get_width() + 30, howplayButtonImg.get_height(),
                            howplayButtonImg, 110, 700)
 
