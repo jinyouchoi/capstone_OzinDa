@@ -1,9 +1,46 @@
 {
   "problems": [
     {
+      "code": "a = 0\n\nif a == 0:\n    _____",
+      "limit_time" : "10",
+      "ans_timeLine": "0",
+      "to_do_num" : "1",
+      "how_many_motion": "1"
+    },
+    {
+      "code": "a = 0\n\nif a == 2:\n    _____\nelse:\n    _____",
+      "limit_time" : "15",
+      "ans_timeLine": "1",
+      "to_do_num" : "1",
+      "how_many_motion": "2"
+    },
+    {
+      "code": "a = 0\n\nif a == 2:\n    _____\nelif a == 7:\n    _____\nelse:\n    _____",
+      "limit_time" : "17",
+      "ans_timeLine": "2",
+      "to_do_num" : "1",
+      "how_many_motion": "3"
+    },
+    {
+      "code": "i = 0\n\nfor i in range(2):\n    _____",
+      "limit_time" : "15",
+      "ans_timeLine": "0,0",
+      "to_do_num" : "2",
+      "how_many_motion": "1"
+    },
+    {
       "code": "i = 1\nwhile i < 3:\n    _____\n    i += 1",
-      "answer" : ""
+      "limit_time" : "20",
+      "ans_timeLine": "0,0",
+      "to_do_num" : "2",
+      "how_many_motion": "1"
+    },
+    {
+      "code": "class DO:\n    def __init__(self):\n        _____\n    def pose1(self):\n        _____\n\ndo = DO()\ndo.pose1()\n",
+      "limit_time" : "30",
+      "ans_timeLine": "0,1",
+      "to_do_num" : "2",
+      "how_many_motion": "2"
     }
-  ],
-  "grading_code": "i = 1\nwhile i < 3:\n    if check_same(cur_motion, motion):\n        i += 1\nprint('correct')"
+  ]
 }
