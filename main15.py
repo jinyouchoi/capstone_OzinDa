@@ -49,7 +49,6 @@ blackImg = blackImg.convert_alpha()
 # 투명하게 만들기
 blackImg.set_alpha(180) #255로 할수록 불투명
 
-
 # 객체 이미지 설정
 
 # 버튼 사이즈
@@ -702,6 +701,9 @@ def SetQuestion(nameList, num):
 
     ### 문제마다 반복할 부분!!
         while level <= how_many_level:
+
+            if level ==  how_many_level:
+                break
         #for level in range(num, how_many_level):
 
             if retryButton_click:
@@ -787,8 +789,6 @@ def SetQuestion(nameList, num):
                 warning_text_secounds = 1.0 #경고 문구를 몇 초동안 띄울 것인지
 
                 while limit_time > 0.0:
-
-                    print(now_motion_count)
 
                     if now_motion_count == to_do_num: #밑에서 +1한걸 위에서 -1 해주는 개념
                         now_motion_count = to_do_num-1
@@ -896,50 +896,11 @@ def SetQuestion(nameList, num):
                         #제출하기 왼손
                         if left_landmark_x is not None and 0 <= left_landmark_y <= 100 and 500 <= left_landmark_x <= 700:
                             submit_button_click = True
-                            if now_motion_count == to_do_num:
-                                cap.release()
-                                gameDisplay.blit(blackImg, (0, 0))
-                                gameDisplay.blit(level_complete, (520, 100))
-                                gameDisplay.blit(nextLevel, (nxButton_x, nxButton_y))
-                                nextLevelButton = Button(nextLevel, nxButton_x, nxButton_y, nextLevel.get_width() + 30,
-                                                         nextLevel.get_height() + 30,
-                                                         nextLevel, nxButton_x, nxButton_y, None)
-
-                                pygame.display.flip()
-
-                                while nextLevel_click == False:
-                                    for event in pygame.event.get():
-                                        nextLevelButton.handle_event(event)
-                                        if event.type == pygame.QUIT:
-                                            pygame.quit()
-                                            quit()
-
-                                        if nextLevelButton.click:
-                                            nextLevel_click = True
                             
                         # 제출하기 오른손
                         if right_landmark_x is not None and 0 <= right_landmark_y <= 100 and 500 <= right_landmark_x <= 700:
                             submit_button_click = True
-                            if now_motion_count == to_do_num:
-                                cap.release()
-                                gameDisplay.blit(blackImg, (0, 0))
-                                gameDisplay.blit(level_complete, (520, 100))
-                                gameDisplay.blit(nextLevel, (nxButton_x, nxButton_y))
-                                nextLevelButton = Button(nextLevel, nxButton_x, nxButton_y, nextLevel.get_width() + 30,
-                                                         nextLevel.get_height() + 30,
-                                                         nextLevel, nxButton_x, nxButton_y, None)
 
-                                pygame.display.flip()
-
-                                while nextLevel_click == False:
-                                    for event in pygame.event.get():
-                                        nextLevelButton.handle_event(event)
-                                        if event.type == pygame.QUIT:
-                                            pygame.quit()
-                                            quit()
-
-                                        if nextLevelButton.click:
-                                            nextLevel_click = True
 ####
                     
                     #하트 출력
@@ -991,7 +952,7 @@ def SetQuestion(nameList, num):
 
                     if submit_button_click == True: #제출하기 클릭
                         if now_motion_count == to_do_num:
-                            cap.release()
+                            #cap.release()
                             gameDisplay.blit(blackImg, (0, 0))
                             gameDisplay.blit(level_complete, (520, 100))
                             gameDisplay.blit(nextLevel, (nxButton_x, nxButton_y))
@@ -1027,7 +988,7 @@ def SetQuestion(nameList, num):
                 #오답화면 처리
                 if not_correct:
                     print("odab")
-                    cap.release()
+                    #cap.release()
                     gameDisplay.blit(blackImg, (0, 0))
                     gameDisplay.blit(level_fail, (520, 100))
 
@@ -1047,6 +1008,10 @@ def SetQuestion(nameList, num):
                                 #try_count += 1 #재도전 횟수
 
                 level += 1
+
+
+        # 모든 반복을 종료했을 경우
+        return
 
 
 #현재 문제에 사용되고 있는 각 모션의 정보를 motion 변수들에 넣을 예정!
