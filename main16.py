@@ -1212,19 +1212,14 @@ def compare_motion(cur_motion, answer_motion):
     return similarity
 
 def check_motion(count, cur_motion, answer_motion):
-
     if len(cur_motion) > 0 and len(answer_motion) > 0:
-
         # cur_motion와 answer_motion의 동작을 비교
         similarity = compare_motion(cur_motion, answer_motion)
-
         # 유사도가 임계값 미만이면 동일한 것으로 간주 (0~1의 값, 1에 가까울수록 유사)
         temporal = 0.9964
-
         # 필요에 따라 임계값을 조정
         if np.all(similarity > temporal):
             count += 1
-
     return count
 
 # 디버깅에 쓰일 마우스 클릭 함수
